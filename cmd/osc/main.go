@@ -3,8 +3,8 @@ package main
 import (
 	"math/rand"
 
+	"github.com/MLonCode/sonic/src/sound"
 	"github.com/hypebeast/go-osc/osc"
-	"github.com/mloncode/sonic/src/sound"
 )
 
 func main() {
