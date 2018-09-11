@@ -240,6 +240,14 @@
   version = "v1.14.0"
 
 [[projects]]
+  digest = "1:a0631d49015c1b349e9f89d694bc3e676be618d6a1079faaac5e2397ab169b29"
+  name = "gopkg.in/bblfsh/client-go.v2"
+  packages = ["tools"]
+  pruneopts = "UT"
+  revision = "765dc689b25042e2d4ac1e5e43cb233cac415d91"
+  version = "v2.8.6"
+
+[[projects]]
   digest = "1:478a1821ab050ad0f03c2b1721eb058acc695ccf851e7de3d1109064739561b0"
   name = "gopkg.in/bblfsh/sdk.v1"
   packages = ["uast"]
@@ -298,6 +306,8 @@
     "github.com/src-d/lookout",
     "github.com/src-d/lookout/util/grpchelper",
     "google.golang.org/grpc",
+    "gopkg.in/bblfsh/client-go.v2/tools",
+    "gopkg.in/bblfsh/sdk.v1/uast",
     "gopkg.in/src-d/go-log.v1",
   ]
   solver-name = "gps-cdcl"
