@@ -1,18 +1,27 @@
 package main
 
 import (
-	"fmt"
+	"math/rand"
 
 	"github.com/hypebeast/go-osc/osc"
+	"github.com/mloncode/sonic/src/sound"
 )
 
 func main() {
 	client := osc.NewClient("localhost", 4559)
 
-	msg := osc.NewMessage("/trigger/prophet")
-	msg.Append(int32(70))
-	msg.Append(int32(100))
-	msg.Append(int32(8))
-	err := client.Send(msg)
-	fmt.Println(err)
+	scale := sound.NewScale(sound.AMajor, 4, 2)
+
+	var notes []sound.Note
+
+	for i := 0; i < 10; i++ {
+		n := rand.Intn(100)
+		note := scale.Get(n)
+		duration := rand.Float64() * 0.5
+
+		notes = append(notes, sound.Note{Note: note, Duration: duration})
+	}
+
+	sequence := sound.NewSequence("prophet", 50.1, 0.1, 0.05, notes)
+	sequence.Play(client)
 }
