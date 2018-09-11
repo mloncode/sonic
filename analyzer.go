@@ -32,21 +32,24 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 	}
 
 	for changes.Next() {
+		log.Infof("got change")
 		change := changes.Change()
 
-		log.Infof("got change")
-		if change.Head == nil || change.Base == nil {
-			continue
+		var baseNodes []sonicNode
+		var headNodes []sonicNode
+
+		if change.Base != nil && change.Base.UAST != nil {
+			baseNodes = toSonicNodes(change.Base.UAST)
 		}
 
-		fmt.Println("old uast nodes:")
-		for _, n := range toSonicNodes(change.Base.UAST) {
-			fmt.Println(n)
+		if change.Head != nil && change.Head.UAST != nil {
+			headNodes = toSonicNodes(change.Head.UAST)
 		}
-		fmt.Println("new uast nodes:")
-		for _, n := range toSonicNodes(change.Head.UAST) {
-			fmt.Println(n)
-		}
+
+		deleted, added, changed := diffNodes(baseNodes, headNodes)
+		printNodes("deleted:", deleted)
+		printNodes("added:", added)
+		printNodes("changed:", changed)
 	}
 
 	if changes.Err() != nil {
@@ -54,6 +57,13 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 	}
 
 	return &lookout.EventResponse{}, nil
+}
+
+func printNodes(header string, nodes []sonicNode) {
+	fmt.Println(header)
+	for _, n := range nodes {
+		fmt.Println(n)
+	}
 }
 
 var uastQuery = "//*[@roleDeclaration and @roleFunction and @startOffset and @endOffset]"
@@ -115,6 +125,43 @@ type sonicNode struct {
 	Token  string
 	Lenght uint32
 }
+
+func (n *sonicNode) Key() string {
+	return fmt.Sprintf("%s%s", n.Type, n.Token)
+}
+
+func diffNodes(oldNodes, newNodes []sonicNode) ([]sonicNode, []sonicNode, []sonicNode) {
+	oldMap := make(map[string]sonicNode, len(oldNodes))
+	for _, n := range oldNodes {
+		oldMap[n.Key()] = n
+	}
+
+	newMap := make(map[string]sonicNode, len(newNodes))
+	for _, n := range newNodes {
+		newMap[n.Key()] = n
+	}
+
+	var deletedNodes []sonicNode
+	for key, n := range oldMap {
+		if _, ok := newMap[key]; !ok {
+			deletedNodes = append(deletedNodes, n)
+		}
+	}
+
+	var addNodes []sonicNode
+	var modifiedNodes []sonicNode
+	for key, n := range newMap {
+		if oldN, ok := oldMap[key]; !ok {
+			addNodes = append(addNodes, n)
+		} else if oldN.Lenght != n.Lenght {
+			modifiedNodes = append(modifiedNodes, n)
+		}
+	}
+
+	return deletedNodes, addNodes, modifiedNodes
+}
+
+// we don't need code below but need to satisfy interface
 
 func (a *Analyzer) NotifyPushEvent(ctx context.Context, e *lookout.PushEvent) (*lookout.EventResponse, error) {
 	return &lookout.EventResponse{}, nil
