@@ -31,6 +31,8 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 		return nil, err
 	}
 
+	var total int
+
 	for changes.Next() {
 		log.Infof("got change")
 		change := changes.Change()
@@ -50,7 +52,11 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 		printNodes("deleted:", deleted)
 		printNodes("added:", added)
 		printNodes("changed:", changed)
+
+		total += len(deleted) + len(added) + len(changed)
 	}
+
+	fmt.Println("total nodes:", total)
 
 	if changes.Err() != nil {
 		log.Errorf(changes.Err(), "failed to get a file from DataServer")
@@ -66,7 +72,7 @@ func printNodes(header string, nodes []sonicNode) {
 	}
 }
 
-var uastQuery = "//*[@roleDeclaration and @startOffset and @endOffset]"
+var uastQuery = "//*[(@roleDeclaration or @roleIdentifier or @roleLiteral) and @startOffset and @endOffset]"
 
 func toSonicNodes(node *uast.Node) []sonicNode {
 	nodes, err := tools.Filter(node, uastQuery)
@@ -82,9 +88,14 @@ func toSonicNodes(node *uast.Node) []sonicNode {
 			continue
 		}
 
+		token := getFirstToken(node)
+		if token == "" {
+			continue
+		}
+
 		result = append(result, sonicNode{
 			Type:   node.InternalType,
-			Token:  getFirstToken(node),
+			Token:  token,
 			Lenght: length,
 		})
 	}
@@ -93,6 +104,10 @@ func toSonicNodes(node *uast.Node) []sonicNode {
 }
 
 func getFirstToken(node *uast.Node) string {
+	if node.Token != "" {
+		return node.Token
+	}
+
 	var n *uast.Node
 	nodesToVisit := []*uast.Node{node}
 
