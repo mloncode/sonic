@@ -66,7 +66,7 @@ func printNodes(header string, nodes []sonicNode) {
 	}
 }
 
-var uastQuery = "//*[@roleDeclaration and @roleFunction and @startOffset and @endOffset]"
+var uastQuery = "//*[@roleDeclaration and @startOffset and @endOffset]"
 
 func toSonicNodes(node *uast.Node) []sonicNode {
 	nodes, err := tools.Filter(node, uastQuery)
