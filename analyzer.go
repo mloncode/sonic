@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/src-d/lookout"
+	"gopkg.in/bblfsh/client-go.v2/tools"
+	"gopkg.in/bblfsh/sdk.v1/uast"
 	log "gopkg.in/src-d/go-log.v1"
 )
 
@@ -19,8 +21,8 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 		Head:            &e.Head,
 		Base:            &e.Base,
 		WantContents:    true,
-		WantLanguage:    false,
-		WantUAST:        false,
+		WantLanguage:    true,
+		WantUAST:        true,
 		ExcludeVendored: true,
 	})
 
@@ -31,22 +33,87 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 
 	for changes.Next() {
 		change := changes.Change()
+
+		log.Infof("got change")
 		if change.Head == nil || change.Base == nil {
 			continue
 		}
 
-		fmt.Println("change arrived", change.Base.Hash, "->", change.Head.Hash)
+		fmt.Println("old uast nodes:")
+		for _, n := range toSonicNodes(change.Base.UAST) {
+			fmt.Println(n)
+		}
+		fmt.Println("new uast nodes:")
+		for _, n := range toSonicNodes(change.Head.UAST) {
+			fmt.Println(n)
+		}
 	}
 
 	if changes.Err() != nil {
 		log.Errorf(changes.Err(), "failed to get a file from DataServer")
 	}
 
-	return &lookout.EventResponse{
-		Comments: []*lookout.Comment{
-			{Text: "it works"},
-		},
-	}, nil
+	return &lookout.EventResponse{}, nil
+}
+
+var uastQuery = "//*[@roleDeclaration and @roleFunction and @startOffset and @endOffset]"
+
+func toSonicNodes(node *uast.Node) []sonicNode {
+	nodes, err := tools.Filter(node, uastQuery)
+	if err != nil {
+		return nil
+	}
+
+	var result []sonicNode
+
+	for _, node := range nodes {
+		length := node.EndPosition.Offset - node.StartPosition.Offset
+		if length == 0 {
+			continue
+		}
+
+		result = append(result, sonicNode{
+			Type:   node.InternalType,
+			Token:  getFirstToken(node),
+			Lenght: length,
+		})
+	}
+
+	return result
+}
+
+func getFirstToken(node *uast.Node) string {
+	var n *uast.Node
+	nodesToVisit := []*uast.Node{node}
+
+	for len(nodesToVisit) > 0 {
+		n, nodesToVisit = nodesToVisit[0], nodesToVisit[1:]
+
+		for i := 0; i < len(n.Children); i++ {
+			nodesToVisit = append(nodesToVisit, n.Children...)
+		}
+
+		if hasRole(n.Roles, uast.Name) && n.Token != "" {
+			return n.Token
+		}
+	}
+
+	return ""
+}
+
+func hasRole(roles []uast.Role, role uast.Role) bool {
+	for _, r := range roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+
+type sonicNode struct {
+	Type   string
+	Token  string
+	Lenght uint32
 }
 
 func (a *Analyzer) NotifyPushEvent(ctx context.Context, e *lookout.PushEvent) (*lookout.EventResponse, error) {
