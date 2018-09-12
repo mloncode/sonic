@@ -5,6 +5,9 @@ import (
 	"crypto/sha1"
 	"fmt"
 
+	"github.com/MLonCode/sonic/src/sound"
+	"github.com/hypebeast/go-osc/osc"
+
 	"github.com/src-d/lookout"
 	"gopkg.in/bblfsh/client-go.v2/tools"
 	"gopkg.in/bblfsh/sdk.v1/uast"
@@ -12,10 +15,14 @@ import (
 )
 
 type Analyzer struct {
-	DataClient *lookout.DataClient
+	DataClient  *lookout.DataClient
+	SoundClient *osc.Client
 }
 
 var _ lookout.AnalyzerServer = &Analyzer{}
+
+var m1 = sound.CreateMarkov("song1.midi")
+var m2 = sound.CreateMarkov("song2.midi")
 
 func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent) (*lookout.EventResponse, error) {
 	changes, err := a.DataClient.GetChanges(ctx, &lookout.ChangesRequest{
@@ -53,6 +60,14 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 		printNodes("deleted:", deleted)
 		printNodes("added:", added)
 		printNodes("changed:", changed)
+
+		deletedSeq := sound.NewSequence("prophet", 100.1, 0.10, 0.05,
+			ConvertMarkov(m2, deleted))
+		deletedSeq.Play(a.SoundClient)
+
+		addedSeq := sound.NewSequence("prophet", 100.1, 0.10, 0.05,
+			ConvertMarkov(m2, added))
+		addedSeq.Play(a.SoundClient)
 
 		total += len(deleted) + len(added) + len(changed)
 	}

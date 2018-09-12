@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/MLonCode/sonic"
+	"github.com/hypebeast/go-osc/osc"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/src-d/lookout"
 	"github.com/src-d/lookout/util/grpchelper"
@@ -41,7 +42,8 @@ func main() {
 	}
 
 	analyzer := &sonic.Analyzer{
-		DataClient: lookout.NewDataClient(conn),
+		DataClient:  lookout.NewDataClient(conn),
+		SoundClient: osc.NewClient("localhost", 4559),
 	}
 
 	server := grpchelper.NewServer()
