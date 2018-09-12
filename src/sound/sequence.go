@@ -12,12 +12,14 @@ type Note struct {
 	Duration float64
 }
 
+type Notes []Note
+
 type Sequence struct {
 	Instrument string
 	Cutoff     float64
 	Attack     float64
 	Release    float64
-	Notes      []Note
+	Notes      Notes
 }
 
 func NewSequence(i string, c, a, r float64, n []Note) Sequence {
@@ -25,6 +27,7 @@ func NewSequence(i string, c, a, r float64, n []Note) Sequence {
 }
 
 func (s *Sequence) Play(client *osc.Client) {
+	// sort.Sort(s.Notes)
 	for _, n := range s.Notes {
 		addr := fmt.Sprintf("/trigger/%s", s.Instrument)
 		msg := osc.NewMessage(addr)
@@ -65,3 +68,7 @@ live_loop :foo do
 end
 
 */
+
+func (a Notes) Len() int           { return len(a) }
+func (a Notes) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a Notes) Less(i, j int) bool { return a[i].Duration > a[j].Duration }

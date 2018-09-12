@@ -6,8 +6,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-
-	"github.com/sanity-io/litter"
 )
 
 type midiNote struct {
@@ -58,8 +56,8 @@ func midiLoad(f string) []midiNote {
 
 type Markov map[string]map[string]int
 
-func CreateMarkov() Markov {
-	notes := midiLoad("song1.midi")
+func CreateMarkov(f string) Markov {
+	notes := midiLoad(f)
 	m := make(Markov)
 
 	previous := ""
@@ -108,16 +106,14 @@ func (m Markov) Get(prev string, rnd int) string {
 		pList = append(pList, p)
 	}
 
-	litter.Dump(pList)
-
 	num := rnd % max
 	cur := 0
 	for _, p := range pList {
+		cur += p.Value
 		println(max, cur, num)
 		if cur >= num {
 			return p.Name
 		}
-		cur += p.Value
 	}
 
 	return ""

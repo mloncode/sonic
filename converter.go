@@ -7,6 +7,8 @@ import (
 	"github.com/MLonCode/sonic/src/sound"
 )
 
+const logaritmic = false
+
 func Convert(scale sound.Scale, nodes []sonicNode) []sound.Note {
 	var max uint32
 	for _, n := range nodes {
@@ -45,8 +47,13 @@ func ConvertMarkov(m sound.Markov, nodes []sonicNode) []sound.Note {
 
 	last := m.Rand(len(nodes))
 	for i, n := range nodes {
-		duration := float64(n.Lenght)
-		duration = toLog(float64(max), duration) * 0.25
+		var duration float64
+		if logaritmic {
+			duration = float64(n.Lenght)
+			duration = toLog(float64(max), duration) * 0.25
+		} else {
+			duration = float64(n.Lenght) / float64(max)
+		}
 
 		hash.Reset()
 		hash.Write([]byte(n.Token))
