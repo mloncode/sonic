@@ -2,6 +2,7 @@ package sonic
 
 import (
 	"context"
+	"crypto/sha1"
 	"fmt"
 
 	"github.com/src-d/lookout"
@@ -41,11 +42,11 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 		var headNodes []sonicNode
 
 		if change.Base != nil && change.Base.UAST != nil {
-			baseNodes = toSonicNodes(change.Base.UAST)
+			baseNodes = toSonicNodes(change.Base)
 		}
 
 		if change.Head != nil && change.Head.UAST != nil {
-			headNodes = toSonicNodes(change.Head.UAST)
+			headNodes = toSonicNodes(change.Head)
 		}
 
 		deleted, added, changed := diffNodes(baseNodes, headNodes)
@@ -65,17 +66,28 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 	return &lookout.EventResponse{}, nil
 }
 
+type sonicNode struct {
+	Type   string
+	Token  string
+	Lenght uint32
+	Hash   [20]byte
+}
+
+func (n *sonicNode) Key() string {
+	return fmt.Sprintf("%s%s", n.Type, n.Token)
+}
+
 func printNodes(header string, nodes []sonicNode) {
 	fmt.Println(header)
 	for _, n := range nodes {
-		fmt.Println(n)
+		fmt.Println(n.Type, n.Token, n.Lenght)
 	}
 }
 
 var uastQuery = "//*[(@roleDeclaration or @roleIdentifier or @roleLiteral) and @startOffset and @endOffset]"
 
-func toSonicNodes(node *uast.Node) []sonicNode {
-	nodes, err := tools.Filter(node, uastQuery)
+func toSonicNodes(file *lookout.File) []sonicNode {
+	nodes, err := tools.Filter(file.UAST, uastQuery)
 	if err != nil {
 		return nil
 	}
@@ -93,10 +105,13 @@ func toSonicNodes(node *uast.Node) []sonicNode {
 			continue
 		}
 
+		content := file.Content[node.StartPosition.Offset:node.EndPosition.Offset]
+
 		result = append(result, sonicNode{
 			Type:   node.InternalType,
 			Token:  token,
 			Lenght: length,
+			Hash:   sha1.Sum(content),
 		})
 	}
 
@@ -135,16 +150,6 @@ func hasRole(roles []uast.Role, role uast.Role) bool {
 	return false
 }
 
-type sonicNode struct {
-	Type   string
-	Token  string
-	Lenght uint32
-}
-
-func (n *sonicNode) Key() string {
-	return fmt.Sprintf("%s%s", n.Type, n.Token)
-}
-
 func diffNodes(oldNodes, newNodes []sonicNode) ([]sonicNode, []sonicNode, []sonicNode) {
 	oldMap := make(map[string]sonicNode, len(oldNodes))
 	for _, n := range oldNodes {
@@ -168,7 +173,7 @@ func diffNodes(oldNodes, newNodes []sonicNode) ([]sonicNode, []sonicNode, []soni
 	for key, n := range newMap {
 		if oldN, ok := oldMap[key]; !ok {
 			addNodes = append(addNodes, n)
-		} else if oldN.Lenght != n.Lenght {
+		} else if oldN.Hash != n.Hash {
 			modifiedNodes = append(modifiedNodes, n)
 		}
 	}
