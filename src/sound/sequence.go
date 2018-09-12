@@ -32,7 +32,7 @@ func (s *Sequence) Play(client *osc.Client) {
 		// message: note, duration, cutoff, release
 
 		msg.Append(n.Note)
-		msg.Append(n.Duration)
+		msg.Append(n.Duration / 1.3)
 		msg.Append(s.Cutoff)
 		msg.Append(s.Attack)
 		msg.Append(s.Release)

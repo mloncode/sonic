@@ -19,11 +19,12 @@ func NewScale(notes []string, base, width int) Scale {
 	return Scale{scale}
 }
 
-func (c *Scale) Get(number int) string {
-	return c.Notes[number%len(c.Notes)]
+func (c *Scale) Get(number uint32) string {
+	return c.Notes[number%uint32(len(c.Notes))]
 }
 
 var (
 	EMajor = []string{"E", "Fs", "Gs", "A", "B", "Cs", "Ds"}
 	AMajor = []string{"A", "B", "Cs", "D", "E", "Fs", "Gs"}
+	CMinor = []string{"C", "D", "Es", "F", "G", "As", "Bs"}
 )
