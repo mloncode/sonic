@@ -1,8 +1,7 @@
 package main
 
 import (
-	"math/rand"
-
+	"github.com/MLonCode/sonic"
 	"github.com/MLonCode/sonic/src/sound"
 	"github.com/hypebeast/go-osc/osc"
 )
@@ -10,18 +9,14 @@ import (
 func main() {
 	client := osc.NewClient("localhost", 4559)
 
-	scale := sound.NewScale(sound.AMajor, 4, 2)
+	amajor := sound.NewScale(sound.AMajor, 4, 2)
+	cminor := sound.NewScale(sound.CMinor, 4, 2)
 
-	var notes []sound.Note
+	oldChanges := sound.NewSequence("prophet", 80.1, 0.10, 0.05,
+		sonic.Convert(amajor, sonic.File1.Old))
+	newChanges := sound.NewSequence("prophet", 100.1, 0.10, 0.05,
+		sonic.Convert(cminor, sonic.File1.New))
 
-	for i := 0; i < 10; i++ {
-		n := rand.Intn(100)
-		note := scale.Get(n)
-		duration := rand.Float64() * 0.5
-
-		notes = append(notes, sound.Note{Note: note, Duration: duration})
-	}
-
-	sequence := sound.NewSequence("prophet", 50.1, 0.1, 0.05, notes)
-	sequence.Play(client)
+	oldChanges.Play(client)
+	newChanges.Play(client)
 }
