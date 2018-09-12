@@ -2,6 +2,7 @@ package sonic
 
 import (
 	"context"
+	"crypto/sha1"
 	"fmt"
 
 	"github.com/src-d/lookout"
@@ -31,23 +32,32 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 		return nil, err
 	}
 
+	var total int
+
 	for changes.Next() {
+		log.Infof("got change")
 		change := changes.Change()
 
-		log.Infof("got change")
-		if change.Head == nil || change.Base == nil {
-			continue
+		var baseNodes []sonicNode
+		var headNodes []sonicNode
+
+		if change.Base != nil && change.Base.UAST != nil {
+			baseNodes = toSonicNodes(change.Base)
 		}
 
-		fmt.Println("old uast nodes:")
-		for _, n := range toSonicNodes(change.Base.UAST) {
-			fmt.Println(n)
+		if change.Head != nil && change.Head.UAST != nil {
+			headNodes = toSonicNodes(change.Head)
 		}
-		fmt.Println("new uast nodes:")
-		for _, n := range toSonicNodes(change.Head.UAST) {
-			fmt.Println(n)
-		}
+
+		deleted, added, changed := diffNodes(baseNodes, headNodes)
+		printNodes("deleted:", deleted)
+		printNodes("added:", added)
+		printNodes("changed:", changed)
+
+		total += len(deleted) + len(added) + len(changed)
 	}
+
+	fmt.Println("total nodes:", total)
 
 	if changes.Err() != nil {
 		log.Errorf(changes.Err(), "failed to get a file from DataServer")
@@ -56,10 +66,28 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 	return &lookout.EventResponse{}, nil
 }
 
-var uastQuery = "//*[@roleDeclaration and @roleFunction and @startOffset and @endOffset]"
+type sonicNode struct {
+	Type   string
+	Token  string
+	Lenght uint32
+	Hash   [20]byte
+}
 
-func toSonicNodes(node *uast.Node) []sonicNode {
-	nodes, err := tools.Filter(node, uastQuery)
+func (n *sonicNode) Key() string {
+	return fmt.Sprintf("%s%s", n.Type, n.Token)
+}
+
+func printNodes(header string, nodes []sonicNode) {
+	fmt.Println(header)
+	for _, n := range nodes {
+		fmt.Println(n.Type, n.Token, n.Lenght)
+	}
+}
+
+var uastQuery = "//*[(@roleDeclaration or @roleIdentifier or @roleLiteral) and @startOffset and @endOffset]"
+
+func toSonicNodes(file *lookout.File) []sonicNode {
+	nodes, err := tools.Filter(file.UAST, uastQuery)
 	if err != nil {
 		return nil
 	}
@@ -72,10 +100,18 @@ func toSonicNodes(node *uast.Node) []sonicNode {
 			continue
 		}
 
+		token := getFirstToken(node)
+		if token == "" {
+			continue
+		}
+
+		content := file.Content[node.StartPosition.Offset:node.EndPosition.Offset]
+
 		result = append(result, sonicNode{
 			Type:   node.InternalType,
-			Token:  getFirstToken(node),
+			Token:  token,
 			Lenght: length,
+			Hash:   sha1.Sum(content),
 		})
 	}
 
@@ -83,6 +119,10 @@ func toSonicNodes(node *uast.Node) []sonicNode {
 }
 
 func getFirstToken(node *uast.Node) string {
+	if node.Token != "" {
+		return node.Token
+	}
+
 	var n *uast.Node
 	nodesToVisit := []*uast.Node{node}
 
@@ -110,11 +150,38 @@ func hasRole(roles []uast.Role, role uast.Role) bool {
 	return false
 }
 
-type sonicNode struct {
-	Type   string
-	Token  string
-	Lenght uint32
+func diffNodes(oldNodes, newNodes []sonicNode) ([]sonicNode, []sonicNode, []sonicNode) {
+	oldMap := make(map[string]sonicNode, len(oldNodes))
+	for _, n := range oldNodes {
+		oldMap[n.Key()] = n
+	}
+
+	newMap := make(map[string]sonicNode, len(newNodes))
+	for _, n := range newNodes {
+		newMap[n.Key()] = n
+	}
+
+	var deletedNodes []sonicNode
+	for key, n := range oldMap {
+		if _, ok := newMap[key]; !ok {
+			deletedNodes = append(deletedNodes, n)
+		}
+	}
+
+	var addNodes []sonicNode
+	var modifiedNodes []sonicNode
+	for key, n := range newMap {
+		if oldN, ok := oldMap[key]; !ok {
+			addNodes = append(addNodes, n)
+		} else if oldN.Hash != n.Hash {
+			modifiedNodes = append(modifiedNodes, n)
+		}
+	}
+
+	return deletedNodes, addNodes, modifiedNodes
 }
+
+// we don't need code below but need to satisfy interface
 
 func (a *Analyzer) NotifyPushEvent(ctx context.Context, e *lookout.PushEvent) (*lookout.EventResponse, error) {
 	return &lookout.EventResponse{}, nil
