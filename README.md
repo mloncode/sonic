@@ -1,18 +1,15 @@
 # Sonic
 
-[Lookout](https://github.com/src-d/lookout) analyzer that uses [Sonic Pi](https://sonic-pi.net/) to generate sound from PRs.
+[Lookout](https://github.com/src-d/lookout) analyzer that generates sound from PRs.
 
 The analyzer part uses [bblfsh](https://bblf.sh) to extract the UAST nodes from old and new code separating the nodes in deleted and added. It gets the type of node, token (name), size (characters) and hash (used for comparing).
 
-Sound generation uses a preconfigured Sonic Pi setup with a synth and listens to [OSC](https://en.wikipedia.org/wiki/Open_Sound_Control) for note and synth configuration data. Currently the data sent is:
+Sound generation is compatible with any midi synthesizer which exposes midi device. Currently the data sent is:
 
 * Note
 * Duration (sustain time in seconds)
-* Cutoff (filter parameter for the synth)
-* Attack (how much it takes the note to reach volume peak)
-* Release (how much time it sounds after "releasing" the key)
 
-Currently only Note and Duration are changed and the rest of parameters are always the same. Two note sequences are generated per file, one for deleted and another one for added:
+Two note sequences are generated per file, one for deleted and another one for added:
 
 * file 1
   * deleted sequence
@@ -35,7 +32,7 @@ Duration is a direct conversion from the node size with a maximum of 250 millise
 
 ## Getting Started
 
-Here's the information on how to configure Sonic Pi and the development environment. The project as is cannot be used to send data to github as the sound is played where Sonic Pi is running. Currently the OSC endpoint is hardcoded to `localhost`.
+Here's the information on how to configure midi synthesizer and the development environment. The project as is cannot be used to send data to github as the sound is played where synthesizer is running.
 
 ### Prerequisites
 
@@ -47,33 +44,18 @@ docker run -d --name bblfshd --privileged -p 9432:9432 -v /var/lib/bblfshd:/var/
 
 * [lookout sdk binary](https://github.com/src-d/lookout/releases)
 
-* [Sonic Pi](https://sonic-pi.net/)
+* [portmidi](http://portmedia.sourceforge.net/portmidi/)
 
-
-
-### Configure Sonic Pi
-
-After installing Sonic Pi check with some examples that works and it produces sound. If you are using Linux and it does not work try using jack 2 instead of jack 1 and changing its configuration.
-
-We need to activate OSC input messages. To do so open preferences, go to IO tab and make sure that "Receive remote OSC messages" is checked.
-
-The last step is setting the configuration script in the editor. Delete whatever is in it and paste this script:
-
-```ruby
-live_loop :foo do
-  use_real_time
-  note, duration, cutoff, attack, release = sync "/osc/trigger/prophet"
-  synth :prophet,
-    note: note,
-    cutoff: cutoff,
-    sustain: duration,
-    release: release,
-    attack: attack,
-    amp: 8
-end
+```
+apt-get install libportmidi-dev
+# or
+brew install portmidi
 ```
 
-Press `Run` button.
+* Midi synthesizer
+
+  - for macOS we recommend [SimpleSynth](http://notahat.com/simplesynth/)
+
 
 ## Running it
 
@@ -82,7 +64,7 @@ Press `Run` button.
 There's a sound test with hardcoded data that can be run with:
 
 ```
-go run cmd/osc/main.go
+go run cmd/test/main.go
 ```
 
 ### Run analyzer
