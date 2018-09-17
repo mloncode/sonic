@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	m1 := sound.CreateMarkov("song1.midi")
-	m2 := sound.CreateMarkov("song2.midi")
+	m1 := sound.NewMarkov("song1.midi")
+	m2 := sound.NewMarkov("song2.midi")
 
 	client := osc.NewClient("localhost", 4559)
 
