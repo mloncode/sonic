@@ -21,8 +21,8 @@ type Analyzer struct {
 
 var _ lookout.AnalyzerServer = &Analyzer{}
 
-var m1 = sound.CreateMarkov("song1.midi")
-var m2 = sound.CreateMarkov("song2.midi")
+var m1 = sound.NewMarkov("song1.midi")
+var m2 = sound.NewMarkov("song2.midi")
 
 func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent) (*lookout.EventResponse, error) {
 	changes, err := a.DataClient.GetChanges(ctx, &lookout.ChangesRequest{
