@@ -105,6 +105,14 @@
   version = "v0.8.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ade13210417b3b796b2d4c6cc56291735f5392d3066e045c0b53d10d39fe2d7b"
+  name = "github.com/rakyll/portmidi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1246dd47c56089ea2ae791266edb7f4c6b90c045"
+
+[[projects]]
   digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
@@ -303,6 +311,7 @@
   input-imports = [
     "github.com/hypebeast/go-osc/osc",
     "github.com/kelseyhightower/envconfig",
+    "github.com/rakyll/portmidi",
     "github.com/src-d/lookout",
     "github.com/src-d/lookout/util/grpchelper",
     "google.golang.org/grpc",
