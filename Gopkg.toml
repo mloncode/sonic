@@ -25,3 +25,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/rakyll/portmidi"
+
+[[constraint]]
+  name = "github.com/gomidi/mid"
+  version = "0.16.1"

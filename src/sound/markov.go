@@ -1,26 +1,13 @@
 package sound
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"os"
 	"sort"
+
+	"github.com/gomidi/mid"
 )
 
-type midiNote struct {
-	Key      int `json:"midi"`
-	Duration float64
-}
-
-type midiTrack struct {
-	Notes []midiNote
-}
-
-type midi struct {
-	Tracks []midiTrack
-}
-
-func midiLoad(f string) []midiNote {
+func midiLoad(f string) []int {
 	j, err := os.Open(f)
 	if err != nil {
 		panic(err.Error())
@@ -28,25 +15,14 @@ func midiLoad(f string) []midiNote {
 
 	defer j.Close()
 
-	b, err := ioutil.ReadAll(j)
-	if err != nil {
-		panic(err.Error())
+	var notes []int
+	rd := mid.NewReader(mid.NoLogger())
+	rd.Msg.Channel.NoteOn = func(p *mid.Position, channel, key, vel uint8) {
+		notes = append(notes, int(key))
 	}
 
-	var m midi
-
-	json.Unmarshal(b, &m)
-
-	var notes []midiNote
-	for _, t := range m.Tracks {
-		for _, n := range t.Notes {
-			note := midiNote{
-				Key:      n.Key,
-				Duration: n.Duration,
-			}
-
-			notes = append(notes, note)
-		}
+	if err := rd.ReadSMF(j); err != nil {
+		panic(err.Error())
 	}
 
 	return notes
@@ -66,10 +42,10 @@ func NewMarkov(f string) Markov {
 				chain[previous] = make(map[int]uint32)
 			}
 
-			chain[previous][n.Key]++
+			chain[previous][n]++
 		}
 
-		previous = n.Key
+		previous = n
 	}
 
 	m := make(Markov)
