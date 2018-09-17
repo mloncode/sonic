@@ -1,14 +1,14 @@
 package sound
 
 import (
-	"fmt"
+	"log"
 	"time"
 
-	"github.com/hypebeast/go-osc/osc"
+	"github.com/rakyll/portmidi"
 )
 
 type Note struct {
-	Note     string
+	Note     int64
 	Duration float64
 }
 
@@ -16,58 +16,29 @@ type Notes []Note
 
 type Sequence struct {
 	Instrument string
-	Cutoff     float64
-	Attack     float64
-	Release    float64
 	Notes      Notes
 }
 
-func NewSequence(i string, c, a, r float64, n []Note) Sequence {
-	return Sequence{i, c, a, r, n}
+func NewSequence(i string, n []Note) Sequence {
+	return Sequence{i, n}
 }
 
-func (s *Sequence) Play(client *osc.Client) {
-	// sort.Sort(s.Notes)
-	for _, n := range s.Notes {
-		addr := fmt.Sprintf("/trigger/%s", s.Instrument)
-		msg := osc.NewMessage(addr)
-
-		// message: note, duration, cutoff, release
-
-		msg.Append(n.Note)
-		msg.Append(n.Duration / 1.3)
-		msg.Append(s.Cutoff)
-		msg.Append(s.Attack)
-		msg.Append(s.Release)
-		err := client.Send(msg)
-
-		println("note", n.Note)
-		if err != nil {
-			println("err", err.Error())
-		}
-
-		time.Sleep(time.Duration(n.Duration * float64(time.Second)))
+func (s *Sequence) Play(id portmidi.DeviceID) {
+	out, err := portmidi.NewOutputStream(id, 1024, 0)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	for _, n := range s.Notes {
+		log.Print("note", n.Note)
+
+		out.WriteShort(0x90, n.Note, 100)
+		time.Sleep(time.Duration(n.Duration * float64(time.Second)))
+		out.WriteShort(0x80, n.Note, 100)
+	}
+
+	out.Close()
 }
-
-/*
-
-sonic pi script:
-
-
-live_loop :foo do
-  use_real_time
-  note, duration, cutoff, attack, release = sync "/osc/trigger/prophet"
-  synth :prophet,
-    note: note,
-    cutoff: cutoff,
-    sustain: duration,
-    release: release,
-    attack: attack,
-    amp: 8
-end
-
-*/
 
 func (a Notes) Len() int           { return len(a) }
 func (a Notes) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

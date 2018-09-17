@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/MLonCode/sonic/src/sound"
-	"github.com/hypebeast/go-osc/osc"
+	"github.com/rakyll/portmidi"
 
 	"github.com/src-d/lookout"
 	"gopkg.in/bblfsh/client-go.v2/tools"
@@ -15,8 +15,8 @@ import (
 )
 
 type Analyzer struct {
-	DataClient  *lookout.DataClient
-	SoundClient *osc.Client
+	DataClient *lookout.DataClient
+	DeviceID   portmidi.DeviceID
 }
 
 var _ lookout.AnalyzerServer = &Analyzer{}
@@ -61,13 +61,11 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 		printNodes("added:", added)
 		printNodes("changed:", changed)
 
-		deletedSeq := sound.NewSequence("prophet", 100.1, 0.10, 0.05,
-			ConvertMarkov(m2, deleted))
-		deletedSeq.Play(a.SoundClient)
+		deletedSeq := sound.NewSequence("prophet", ConvertMarkov(m2, deleted))
+		deletedSeq.Play(a.DeviceID)
 
-		addedSeq := sound.NewSequence("prophet", 100.1, 0.10, 0.05,
-			ConvertMarkov(m2, added))
-		addedSeq.Play(a.SoundClient)
+		addedSeq := sound.NewSequence("prophet", ConvertMarkov(m2, added))
+		addedSeq.Play(a.DeviceID)
 
 		total += len(deleted) + len(added) + len(changed)
 	}

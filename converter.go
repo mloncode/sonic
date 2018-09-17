@@ -28,7 +28,7 @@ func Convert(scale sound.Scale, nodes []sonicNode) []sound.Note {
 		hash.Write([]byte(n.Token))
 		note := scale.Get(hash.Sum32())
 
-		notes[i] = sound.Note{Note: note, Duration: duration}
+		notes[i] = sound.Note{Note: int64(note), Duration: duration}
 	}
 
 	return notes
@@ -60,7 +60,7 @@ func ConvertMarkov(m sound.Markov, nodes []sonicNode) []sound.Note {
 		note := m.Get(last, hash.Sum32())
 		last = note
 
-		notes[i] = sound.Note{Note: note, Duration: duration}
+		notes[i] = sound.Note{Note: int64(note), Duration: duration}
 	}
 
 	return notes

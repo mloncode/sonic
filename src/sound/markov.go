@@ -5,11 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
-	"strings"
 )
 
 type midiNote struct {
-	Name     string
+	Key      int `json:"midi"`
 	Duration float64
 }
 
@@ -38,12 +37,11 @@ func midiLoad(f string) []midiNote {
 
 	json.Unmarshal(b, &m)
 
-	replacer := strings.NewReplacer("#", "b")
 	var notes []midiNote
 	for _, t := range m.Tracks {
 		for _, n := range t.Notes {
 			note := midiNote{
-				Name:     replacer.Replace(n.Name),
+				Key:      n.Key,
 				Duration: n.Duration,
 			}
 
@@ -54,24 +52,24 @@ func midiLoad(f string) []midiNote {
 	return notes
 }
 
-type markov map[string]map[string]uint32
-type Markov map[string][]probability
+type markov map[int]map[int]uint32
+type Markov map[int][]probability
 
 func NewMarkov(f string) Markov {
 	notes := midiLoad(f)
 	chain := make(markov)
 
-	previous := ""
+	previous := 0
 	for _, n := range notes {
-		if previous != "" {
+		if previous != 0 {
 			if chain[previous] == nil {
-				chain[previous] = make(map[string]uint32)
+				chain[previous] = make(map[int]uint32)
 			}
 
-			chain[previous][n.Name]++
+			chain[previous][n.Key]++
 		}
 
-		previous = n.Name
+		previous = n.Key
 	}
 
 	m := make(Markov)
@@ -84,15 +82,15 @@ func NewMarkov(f string) Markov {
 }
 
 type probability struct {
-	Name  string
+	Key   int
 	Value uint32
 }
 
 const probMax uint32 = (1 << 32) - 1
 
-func getProbabilities(probs map[string]uint32) []probability {
+func getProbabilities(probs map[int]uint32) []probability {
 	var max uint32
-	var keys []string
+	var keys []int
 
 	for n, p := range probs {
 		keys = append(keys, n)
@@ -104,7 +102,7 @@ func getProbabilities(probs map[string]uint32) []probability {
 	}
 
 	// keys are sorted as map order is not stable
-	sort.Strings(keys)
+	sort.Ints(keys)
 
 	// probabilities are scaled from 0 to max(uint32)
 	scale := float64(probMax) / float64(max)
@@ -128,7 +126,7 @@ func getProbabilities(probs map[string]uint32) []probability {
 	return pList
 }
 
-func (m Markov) Get(prev string, num uint32) string {
+func (m Markov) Get(prev int, num uint32) int {
 	chain := m[prev]
 	if chain == nil {
 		return m.Rand(num)
@@ -136,22 +134,22 @@ func (m Markov) Get(prev string, num uint32) string {
 
 	for _, p := range chain {
 		if p.Value >= num {
-			return p.Name
+			return p.Key
 		}
 	}
 
 	return m.Rand(num)
 }
 
-func (m Markov) Rand(num uint32) string {
+func (m Markov) Rand(num uint32) int {
 	// if the chain is not initialized return a valid note
 	if m == nil {
-		return "C3"
+		return 24 * 3 * 12 // C3
 	}
 
-	var keys []string
+	var keys []int
 
-	for n, _ := range m {
+	for n := range m {
 		keys = append(keys, n)
 	}
 

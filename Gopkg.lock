@@ -42,14 +42,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d8496f9050b570a3d3224909dfe0b72337878addcbdf97a1ee997611f68ea810"
-  name = "github.com/hypebeast/go-osc"
-  packages = ["osc"]
-  pruneopts = "UT"
-  revision = "592fa95c06c9545c783966963785f74e4a088d6a"
-
-[[projects]]
-  branch = "master"
   digest = "1:62fe3a7ea2050ecbd753a71889026f83d73329337ada66325cbafd5dea5f713d"
   name = "github.com/jbenet/go-context"
   packages = ["io"]
@@ -103,6 +95,14 @@
   pruneopts = "UT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ade13210417b3b796b2d4c6cc56291735f5392d3066e045c0b53d10d39fe2d7b"
+  name = "github.com/rakyll/portmidi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1246dd47c56089ea2ae791266edb7f4c6b90c045"
 
 [[projects]]
   digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
@@ -301,8 +301,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/hypebeast/go-osc/osc",
     "github.com/kelseyhightower/envconfig",
+    "github.com/rakyll/portmidi",
     "github.com/src-d/lookout",
     "github.com/src-d/lookout/util/grpchelper",
     "google.golang.org/grpc",

@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/MLonCode/sonic"
-	"github.com/hypebeast/go-osc/osc"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/rakyll/portmidi"
 	"github.com/src-d/lookout"
 	"github.com/src-d/lookout/util/grpchelper"
 	"google.golang.org/grpc"
@@ -41,9 +41,20 @@ func main() {
 		return
 	}
 
+	if err := portmidi.Initialize(); err != nil {
+		log.Errorf(err, "can't initializer portmidi")
+		return
+	}
+	defer portmidi.Terminate()
+
+	if portmidi.CountDevices() == 0 {
+		log.Errorf(nil, "no midi devices")
+		return
+	}
+
 	analyzer := &sonic.Analyzer{
-		DataClient:  lookout.NewDataClient(conn),
-		SoundClient: osc.NewClient("localhost", 4559),
+		DataClient: lookout.NewDataClient(conn),
+		DeviceID:   portmidi.DefaultOutputDeviceID(),
 	}
 
 	server := grpchelper.NewServer()
