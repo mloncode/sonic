@@ -30,6 +30,54 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:4076f2baeea81bf5d904ce4507f862598ec8980b6198fea3f05068e22e2a307f"
+  name = "github.com/gomidi/cc"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b87893bac8de17315e44ba6312de8f451d4103ad"
+  version = "v0.2.0"
+
+[[projects]]
+  digest = "1:fc5c68b251b6c29e467a8732e7cea8debf6298963d190e3f732e88d9f2645e71"
+  name = "github.com/gomidi/connect"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "504d752318347f0dd356c96c46f1fb0d939024e6"
+  version = "v0.11.1"
+
+[[projects]]
+  digest = "1:3aa92f48ff0daab3d8042ca592b14265d42e70137cc0e841120ee1423138a7f4"
+  name = "github.com/gomidi/mid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7216698f282e51b0a152855d1548761fade6c552"
+  version = "v0.16.1"
+
+[[projects]]
+  digest = "1:d75c62cc5325ac789a71479f9bcd8601d83fc1105b53e3e9ae320d7f466796de"
+  name = "github.com/gomidi/midi"
+  packages = [
+    ".",
+    "internal/midilib",
+    "internal/runningstatus",
+    "internal/vlq",
+    "midimessage/channel",
+    "midimessage/meta",
+    "midimessage/meta/meter",
+    "midimessage/realtime",
+    "midimessage/syscommon",
+    "midimessage/sysex",
+    "midireader",
+    "midiwriter",
+    "smf",
+    "smf/smfreader",
+    "smf/smfwriter",
+  ]
+  pruneopts = "UT"
+  revision = "366bb87a29a604c502071cf4f2335f753e4c174a"
+  version = "v1.6.0"
+
+[[projects]]
   digest = "1:e7fbf52d47e724a32e4a589e9630d14d4681072bdfe1a31038ad6aad5cd967d7"
   name = "github.com/grpc-ecosystem/go-grpc-middleware"
   packages = [
@@ -301,6 +349,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/gomidi/mid",
     "github.com/kelseyhightower/envconfig",
     "github.com/rakyll/portmidi",
     "github.com/src-d/lookout",
