@@ -3,7 +3,6 @@ package sound
 import (
 	"os"
 	"sort"
-
     "gitlab.com/gomidi/midi/mid"
 )
 
@@ -28,16 +27,19 @@ func midiLoad(f string) []int {
 	return notes
 }
 
-type markov map[int]map[int]uint32
+type Transitions map[int]map[int]uint32
 type Markov map[int][]probability
 
+// Returns a Markov chain
 func NewMarkov(f string) Markov {
 	notes := midiLoad(f)
-	chain := make(markov)
+	chain := make(Transitions)
 
-	previous := 0
+	// Parse the transitions, i.e. store for a state (note identifier in midi)
+	// the number of transitions to each other note, as observed in the midi file
+	previous := -1
 	for _, n := range notes {
-		if previous != 0 {
+		if previous != -1 {
 			if chain[previous] == nil {
 				chain[previous] = make(map[int]uint32)
 			}
@@ -85,12 +87,12 @@ func getProbabilities(probs map[int]uint32) []probability {
 	var pList []probability
 	var previous uint32
 	for _, k := range keys {
-		t := probs[k]
-		if t == max {
-			// maximum probability is manually set to overcome rounding errors
+		t := uint32(float64(probs[k]) * scale)
+		// take care of overflow
+		if t > probMax - previous {
 			t = probMax
 		} else {
-			t = uint32(float64(t)*scale) + previous
+			t += previous
 		}
 
 		previous = t
