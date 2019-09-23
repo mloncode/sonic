@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/MLonCode/sonic"
+	"github.com/mloncode/sonic"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rakyll/portmidi"
 	"github.com/src-d/lookout"
+	"gopkg.in/src-d/lookout-sdk.v0/pb"
 	"github.com/src-d/lookout/util/grpchelper"
 	"google.golang.org/grpc"
 	log "gopkg.in/src-d/go-log.v1"
@@ -24,7 +25,7 @@ func main() {
 	envconfig.MustProcess("SONIC", &conf)
 	log.Infof("Starting...")
 
-	grpcAddr, err := grpchelper.ToGoGrpcAddress(conf.DataServiceURL)
+	grpcAddr, err := pb.ToGoGrpcAddress(conf.DataServiceURL)
 	if err != nil {
 		log.Errorf(err, "failed to parse DataService addres %s", conf.DataServiceURL)
 		return
@@ -61,7 +62,7 @@ func main() {
 	lookout.RegisterAnalyzerServer(server, analyzer)
 
 	analyzerURL := fmt.Sprintf("ipv4://%s:%d", conf.Host, conf.Port)
-	lis, err := grpchelper.Listen(analyzerURL)
+	lis, err := pb.Listen(analyzerURL)
 	if err != nil {
 		log.Errorf(err, "failed to start analyzer gRPC server on %s", analyzerURL)
 		return

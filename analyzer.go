@@ -5,9 +5,9 @@ import (
 	"crypto/sha1"
 	"fmt"
 
-	"github.com/MLonCode/sonic/src/sound"
+	"github.com/mloncode/sonic/src/sound"
 	"github.com/rakyll/portmidi"
-
+	"gopkg.in/src-d/lookout-sdk.v0/pb"
 	"github.com/src-d/lookout"
 	"gopkg.in/bblfsh/client-go.v2/tools"
 	"gopkg.in/bblfsh/sdk.v1/uast"
@@ -24,7 +24,7 @@ var _ lookout.AnalyzerServer = &Analyzer{}
 var m1 = sound.NewMarkov("song1.midi")
 var m2 = sound.NewMarkov("song2.midi")
 
-func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent) (*lookout.EventResponse, error) {
+func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *pb.ReviewEvent) (*pb.EventResponse, error) {
 	changes, err := a.DataClient.GetChanges(ctx, &lookout.ChangesRequest{
 		Head:            &e.Head,
 		Base:            &e.Base,
@@ -76,7 +76,7 @@ func (a *Analyzer) NotifyReviewEvent(ctx context.Context, e *lookout.ReviewEvent
 		log.Errorf(changes.Err(), "failed to get a file from DataServer")
 	}
 
-	return &lookout.EventResponse{}, nil
+	return &pb.EventResponse{}, nil
 }
 
 type sonicNode struct {
@@ -196,6 +196,6 @@ func diffNodes(oldNodes, newNodes []sonicNode) ([]sonicNode, []sonicNode, []soni
 
 // we don't need code below but need to satisfy interface
 
-func (a *Analyzer) NotifyPushEvent(ctx context.Context, e *lookout.PushEvent) (*lookout.EventResponse, error) {
-	return &lookout.EventResponse{}, nil
+func (a *Analyzer) NotifyPushEvent(ctx context.Context, e *pb.PushEvent) (*pb.EventResponse, error) {
+	return &pb.EventResponse{}, nil
 }

@@ -4,7 +4,7 @@ import (
 	"hash/fnv"
 	"math"
 
-	"github.com/MLonCode/sonic/src/sound"
+	"github.com/mloncode/sonic/src/sound"
 )
 
 const logarithmic = false

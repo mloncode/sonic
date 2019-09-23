@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/MLonCode/sonic"
-	"github.com/MLonCode/sonic/src/sound"
+	"github.com/mloncode/sonic"
+	"github.com/mloncode/sonic/src/sound"
 	"github.com/rakyll/portmidi"
 )
 
