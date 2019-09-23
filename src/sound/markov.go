@@ -4,7 +4,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/gomidi/mid"
+    "gitlab.com/gomidi/midi/mid"
 )
 
 func midiLoad(f string) []int {
@@ -21,7 +21,7 @@ func midiLoad(f string) []int {
 		notes = append(notes, int(key))
 	}
 
-	if err := rd.ReadSMF(j); err != nil {
+	if err := rd.ReadAllSMF(j); err != nil {
 		panic(err.Error())
 	}
 
