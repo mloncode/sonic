@@ -49,12 +49,22 @@ docker run -d --name bblfshd --privileged -p 9432:9432 -v /var/lib/bblfshd:/var/
 ```
 apt-get install libportmidi-dev
 # or
+sudo pacman -S portmidi
+# or
 brew install portmidi
 ```
 
 * Midi synthesizer
 
   - for macOS we recommend [SimpleSynth](http://notahat.com/simplesynth/)
+  - for Linux, [FluidSynth](http://www.fluidsynth.org/). Documentation abouut how to install it can be found [here](https://wiki.archlinux.org/index.php/FluidSynth). Once installed and configured, the output of `aplaymidi -l` should look alike:
+
+  ```
+   Port    Client name                      Port name
+   128:0    FLUID Synth (32076)              Synth input port (32076:0)
+  ```
+
+
 
 
 ## Running it
@@ -98,4 +108,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 * Kuba Podgórski - project idea
 * Alvin Lin - [post about Markov chains and music](https://hackernoon.com/generating-music-using-markov-chains-40c3f3f46405)
-
