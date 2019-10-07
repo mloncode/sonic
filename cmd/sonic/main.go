@@ -6,11 +6,11 @@ import (
 
 	"github.com/mloncode/sonic"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/rakyll/portmidi"
 	"github.com/src-d/lookout"
 	"gopkg.in/src-d/lookout-sdk.v0/pb"
 	"github.com/src-d/lookout/util/grpchelper"
 	"google.golang.org/grpc"
+	driver "gitlab.com/gomidi/portmididrv"
 	log "gopkg.in/src-d/go-log.v1"
 )
 
@@ -42,20 +42,19 @@ func main() {
 		return
 	}
 
-	if err := portmidi.Initialize(); err != nil {
-		log.Errorf(err, "can't initializer portmidi")
+	drv, err := driver.New()
+	defer drv.Close()
+	if err != nil {
+		log.Errorf(err, "can't initialize the midi driver")
 		return
 	}
-	defer portmidi.Terminate()
 
-	if portmidi.CountDevices() == 0 {
-		log.Errorf(nil, "no midi devices")
-		return
-	}
+	outs, _ := drv.Outs()
+	out := outs[1]
 
 	analyzer := &sonic.Analyzer{
 		DataClient: lookout.NewDataClient(conn),
-		DeviceID:   portmidi.DefaultOutputDeviceID(),
+		OutMidi:    out,
 	}
 
 	server := grpchelper.NewServer()

@@ -3,7 +3,6 @@ package sound
 import (
 	"os"
 	"sort"
-
     "gitlab.com/gomidi/midi/mid"
 )
 
@@ -28,16 +27,24 @@ func midiLoad(f string) []int {
 	return notes
 }
 
-type markov map[int]map[int]uint32
+// Transitions will store for a state (note identifier in midi) the
+// number of transitions to each other note, as observed in the midi file
+type Transitions map[int]map[int]uint32
+// A Markov chain is represented as a hash map with assigns state i -> [probability]
+// where the probability contains the state we can transition to as Key and an integer Value.
+// The array of probabilities is ordered increasingly by Value, where each value
+// represents an interval ]Value for prev state, Value] where the length of that
+// interval is proportional to the probability of going from i to Key
 type Markov map[int][]probability
 
+// Returns a Markov chain
 func NewMarkov(f string) Markov {
 	notes := midiLoad(f)
-	chain := make(markov)
+	chain := make(Transitions)
 
-	previous := 0
+	previous := -1
 	for _, n := range notes {
-		if previous != 0 {
+		if previous != -1 {
 			if chain[previous] == nil {
 				chain[previous] = make(map[int]uint32)
 			}
@@ -64,6 +71,8 @@ type probability struct {
 
 const probMax uint32 = (1 << 32) - 1
 
+// Parses the transitions for a state and generates
+// the probability itervals associated with it
 func getProbabilities(probs map[int]uint32) []probability {
 	var max uint32
 	var keys []int
@@ -85,12 +94,12 @@ func getProbabilities(probs map[int]uint32) []probability {
 	var pList []probability
 	var previous uint32
 	for _, k := range keys {
-		t := probs[k]
-		if t == max {
-			// maximum probability is manually set to overcome rounding errors
+		t := uint32(float64(probs[k]) * scale)
+		// take care of overflow
+		if t > probMax - previous {
 			t = probMax
 		} else {
-			t = uint32(float64(t)*scale) + previous
+			t += previous
 		}
 
 		previous = t
@@ -102,6 +111,9 @@ func getProbabilities(probs map[int]uint32) []probability {
 	return pList
 }
 
+// Receives the initial state (as prev) and a random number, num,
+// in [0, max uint32]. We compute the state whose probability
+// interval contains num.
 func (m Markov) Get(prev int, num uint32) int {
 	chain := m[prev]
 	if chain == nil {
@@ -117,6 +129,8 @@ func (m Markov) Get(prev int, num uint32) int {
 	return m.Rand(num)
 }
 
+// Returns a random state from the Markov chain, given num
+// a random integer
 func (m Markov) Rand(num uint32) int {
 	// if the chain is not initialized return a valid note
 	if m == nil {
