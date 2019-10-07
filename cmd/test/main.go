@@ -2,20 +2,16 @@ package main
 
 import (
 	"log"
-
 	"github.com/mloncode/sonic"
 	"github.com/mloncode/sonic/src/sound"
-	"github.com/rakyll/portmidi"
 )
 
 func main() {
-	if err := portmidi.Initialize(); err != nil {
-		log.Fatal("can't initializer portmidi", err)
-	}
-	defer portmidi.Terminate()
+	out, err := sound.MidiOut()
 
-	if portmidi.CountDevices() == 0 {
-		log.Fatal("no midi devices")
+	if err != nil {
+		log.Fatal(err)
+		return
 	}
 
 	m1 := sound.NewMarkov("song1.midi")
@@ -24,8 +20,6 @@ func main() {
 	oldChanges := sound.NewSequence("prophet", sonic.ConvertMarkov(m1, sonic.File1.Old))
 	newChanges := sound.NewSequence("prophet", sonic.ConvertMarkov(m2, sonic.File1.New))
 
-	deviceID := portmidi.DefaultOutputDeviceID()
-
-	oldChanges.Play(deviceID)
-	newChanges.Play(deviceID)
+	oldChanges.Play(out)
+	newChanges.Play(out)
 }

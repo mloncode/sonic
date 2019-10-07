@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/rakyll/portmidi"
+	"gitlab.com/gomidi/midi/mid"
 )
 
 type Note struct {
@@ -23,18 +23,17 @@ func NewSequence(i string, n []Note) Sequence {
 	return Sequence{i, n}
 }
 
-func (s *Sequence) Play(id portmidi.DeviceID) {
-	out, err := portmidi.NewOutputStream(id, 1024, 0)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (s *Sequence) Play(out mid.Out) {
+	out.Open()
+	wr := mid.ConnectOut(out)
 
 	for _, n := range s.Notes {
 		log.Print("note", n.Note)
 
-		out.WriteShort(0x90, n.Note, 100)
+		note := uint8(n.Note)
+		wr.NoteOn(note, 100)
 		time.Sleep(time.Duration(n.Duration * float64(time.Second)))
-		out.WriteShort(0x80, n.Note, 100)
+		wr.NoteOff(note)
 	}
 
 	out.Close()
