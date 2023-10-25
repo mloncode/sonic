@@ -21,7 +21,7 @@ require (
 	github.com/src-d/lookout-test-fixtures v0.0.0-20191009113507-beb84ef226e8 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
 	gitlab.com/gomidi/midi v1.13.1
-	google.golang.org/grpc v1.53.0
+	google.golang.org/grpc v1.56.3
 	gopkg.in/bblfsh/client-go.v2 v2.8.9
 	gopkg.in/bblfsh/sdk.v1 v1.17.0
 	gopkg.in/bblfsh/sdk.v2 v2.16.4 // indirect
