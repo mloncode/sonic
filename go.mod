@@ -3,7 +3,7 @@ module github.com/mloncode/sonic
 go 1.12
 
 require (
-	github.com/antchfx/xpath v1.0.0 // indirect
+	github.com/antchfx/xpath v1.3.6 // indirect
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
